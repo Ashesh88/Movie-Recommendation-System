@@ -11,7 +11,7 @@ This web app recommends movies using **content-based filtering** powered by TF-I
 - Apply **genre filters** for more relevant suggestions.  
 - Browse an **interactive UI** built with Streamlit.  
 - View **movie posters** fetched from the OMDB API.  
-- Deployed live on [Render](https://movie-recommender-zeic.onrender.com/).  
+- Deployed live on [Render](https://movie-recommendation-system-2w4k.onrender.com/).  
 
 ---
 
@@ -46,8 +46,9 @@ This web app recommends movies using **content-based filtering** powered by TF-I
 
 ## 🌐 Live Demo  
 
-👉 Try it here: [Movie Recommendation System on Render](https://movie-recommender-zeic.onrender.com/)  
+👉 Try it here: [Movie Recommendation System on Render](https://movie-recommendation-system-2w4k.onrender.com/)  
 
 ---
 
 👨‍💻 Created By - **Ashesh Singh**  
+
