@@ -44,11 +44,8 @@ This web app recommends movies using **content-based filtering** powered by TF-I
 
 ---
 
-## 🌐 Live Demo  
 
-👉 Try it here: [Movie Recommendation System on Render](https://movie-recommendation-system-2w4k.onrender.com/)  
-
----
 
 👨‍💻 Created By - **Ashesh Singh**  
+
 
