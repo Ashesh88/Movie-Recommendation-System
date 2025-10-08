@@ -15,7 +15,7 @@ load_dotenv()
 OMDB_API_KEY = os.getenv('OMDB_API_KEY')
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 
-# Initialize Pinecone using your API key
+# Initialize Pinecone
 pc = Pinecone(api_key=PINECONE_API_KEY)
 index = pc.Index("movie-recommendation-system")
 
@@ -62,18 +62,21 @@ def get_movie_poster(imdb_id):
 def main():
     st.set_page_config(page_title="Movie Recommender", layout="wide", initial_sidebar_state="expanded")
 
-    # Custom CSS
+    # Dark-themed CSS
     st.markdown("""<style>
-    body { background-color: #f3f4f6; font-family: 'Arial', sans-serif; }
-    .title { font-size: 40px; font-weight: 700; color: #1F2937; text-align: center; margin-bottom: 40px; }
-    .movie-card { border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: transform 0.3s ease, box-shadow 0.3s ease; margin: 10px; background: linear-gradient(to bottom, #ffffff, #f0f0f0); text-align: center; padding: 10px; height: 100%; }
-    .movie-card:hover { transform: translateY(-5px) scale(1.03); box-shadow: 0 15px 25px rgba(0,0,0,0.3); }
+    body { background-color: #0D0D0D; font-family: 'Arial', sans-serif; color: #FFFFFF; }
+    .title { font-size: 42px; font-weight: 800; color: #E50914; text-align: center; margin-bottom: 40px; }
+    .movie-card { border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.8); transition: transform 0.3s ease, box-shadow 0.3s ease; margin: 10px; background: linear-gradient(to bottom, #1A1A1A, #0D0D0D); text-align: center; padding: 10px; height: 100%; }
+    .movie-card:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 25px rgba(255,0,0,0.5); }
     .movie-image { width: 100%; height: 300px; object-fit: cover; border-radius: 10px; }
-    .movie-title { font-size: 18px; font-weight: 600; color: #111827; margin-top: 10px; min-height: 50px; }
-    .movie-genres { font-size: 14px; color: #6B7280; margin-top: 5px; }
+    .movie-title { font-size: 18px; font-weight: 700; color: #FFFFFF; margin-top: 10px; min-height: 50px; }
+    .movie-genres { font-size: 14px; color: #BBBBBB; margin-top: 5px; }
     .scroll-container { display: flex; overflow-x: auto; padding-bottom: 10px; }
     .scroll-container::-webkit-scrollbar { display: none; }
-    .sidebar .stCheckbox label { font-size: 14px; }
+    .sidebar .stCheckbox label { font-size: 14px; color: #FFFFFF; }
+    .stSelectbox > div > div > div { background-color: #1A1A1A; color: #FFFFFF; border-radius: 8px; }
+    .stButton>button { background-color: #E50914; color: #FFFFFF; font-weight: 700; border-radius: 8px; padding: 0.5em 1em; }
+    .stButton>button:hover { background-color: #F6121D; }
     </style>""", unsafe_allow_html=True)
 
     st.markdown('<div class="title">🎬 Movie Recommendation System</div>', unsafe_allow_html=True)
@@ -97,8 +100,8 @@ def main():
         if not recommended_movies:
             st.write("No recommendations found.")
         else:
-            # Horizontally scrollable carousel
-            st.markdown('<h3 style="color:#1F2937; margin-top:30px;">Recommended Movies</h3>', unsafe_allow_html=True)
+            # Horizontal scrollable carousel
+            st.markdown('<h3 style="color:#E50914; margin-top:30px;">Recommended Movies</h3>', unsafe_allow_html=True)
             st.markdown('<div class="scroll-container">', unsafe_allow_html=True)
             for movie in recommended_movies:
                 poster_url = get_movie_poster(movie['imdb_id'])
