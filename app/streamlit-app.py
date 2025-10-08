@@ -21,7 +21,8 @@ index = pc.Index("movie-recommendation-system")
 
 def get_movie_id_by_title(movie_title, data):
     movie_info = data[data['title'] == movie_title].iloc[0]
-    return movie_info['movieId']
+    movie_id = movie_info['movieId']
+    return movie_id
 
 def recommend_movies(movie_title, data, top_k, selected_genres):
     movie_id = get_movie_id_by_title(movie_title, data)
@@ -44,10 +45,8 @@ def recommend_movies(movie_title, data, top_k, selected_genres):
         movie_id = int(match['id'])
         movie_name = metadata.get('movie_name', 'Unknown Title')
         movie_genre = metadata.get('movie_genre', 'Unknown Genre').split()
-
         if selected_genres and not set(selected_genres).intersection(movie_genre):
             continue
-
         imdb_id = data[data['movieId'] == movie_id]['imdbId'].values[0]
         recommended_movies.append({
             'movie_id': movie_id,
@@ -73,49 +72,27 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # CSS for improved text styling and colors
+    # Custom CSS for title, search box, and background
     st.markdown("""<style>
+        body { background-color: #f0f2f6; }
         .title { 
-            font-size: 36px; 
-            font-weight: 700; 
-            color: #E50914; 
+            font-size: 40px; 
+            font-weight: 800; 
+            color: #1F2937; 
             text-align: center; 
             margin-bottom: 30px; 
             font-family: 'Arial', sans-serif;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
-        .movie-card { 
-            border: 2px solid #ddd; 
-            border-radius: 10px; 
-            padding: 10px; 
-            background-color: rgba(255, 255, 255, 0.9); 
-            text-align: center; 
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); 
-            transition: transform 0.3s ease-in-out; 
-            margin-top: 20px; 
-            width: 100%; 
-            height: 500px; 
+        .stSelectbox>div>div>div { 
+            background-color: #ffffff; 
+            color: #1F2937; 
+            border-radius: 8px; 
         }
-        .movie-card:hover { 
-            transform: scale(1.05); 
-            box-shadow: 0px 8px 12px rgba(0,0,0,0.4);
-        }
-        .movie-title { 
-            font-size: 18px; 
-            font-weight: 700; 
-            margin-top: 10px; 
-            color: #111827; 
-            font-family: 'Arial', sans-serif;
-        }
-        .movie-genres { 
-            font-size: 14px; 
-            color: #6B7280; 
-            margin-top: 5px; 
-            font-style: italic;
-        }
+        .stSelectbox>div>div>div>div { color: #1F2937; }
     </style>""", unsafe_allow_html=True)
 
-    st.markdown('<div class="title">Movie Recommendation System</div>', unsafe_allow_html=True)
+    st.markdown('<div class="title">🎬 Movie Recommendation System</div>', unsafe_allow_html=True)
 
     data = load_data()
     if data is None or data.empty:
