@@ -15,40 +15,55 @@ load_dotenv()
 OMDB_API_KEY = os.getenv('OMDB_API_KEY')
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 
-# Initialize Pinecone
+# Initialize Pinecone using your API key
 pc = Pinecone(api_key=PINECONE_API_KEY)
 index = pc.Index("movie-recommendation-system")
 
 def get_movie_id_by_title(movie_title, data):
     movie_info = data[data['title'] == movie_title].iloc[0]
-    return movie_info['movieId']
+    movie_id = movie_info['movieId']
+    return movie_id
 
 def recommend_movies(movie_title, data, top_k, selected_genres):
+    # Get the movie ID for the provided movie title
     movie_id = get_movie_id_by_title(movie_title, data)
+    if not movie_id:
+        return []
+
+    # Query Pinecone for recommendations
     query_response = index.query(
         id=str(movie_id),
-        top_k=top_k + 1,
+        top_k=top_k + 1,  # +1 to exclude the original movie
         include_metadata=True
     )
 
     if not query_response or 'matches' not in query_response:
+        st.write("No matches found for the movie.")
         return []
 
+    # Collect the recommended movies, skipping the first match (original movie)
     recommended_movies = []
-    for match in query_response['matches'][1:top_k + 1]:
+    for match in query_response['matches'][1:top_k + 1]:  # Start from the 2nd item for recommendations
         metadata = match.get('metadata', {})
-        movie_id = int(match['id'])
+        movie_id = int(match['id'])  # Convert to integer to match data format
         movie_name = metadata.get('movie_name', 'Unknown Title')
-        movie_genre = metadata.get('movie_genre', 'Unknown Genre').split()
-        if selected_genres and not set(selected_genres).intersection(movie_genre):
-            continue
+        movie_genre = metadata.get('movie_genre', 'Unknown Genre').split()  # Split genres for comparison
+        
+        # Check if movie matches any selected genres
+        if selected_genres:
+            if not set(selected_genres).intersection(movie_genre):
+                continue  # Skip if no matching genres
+
+        # Retrieve imdbId from data using movie_id
         imdb_id = data[data['movieId'] == movie_id]['imdbId'].values[0]
+        
         recommended_movies.append({
             'movie_id': movie_id,
             'movie_name': movie_name,
-            'movie_genre': " ".join(movie_genre),
+            'movie_genre': " ".join(movie_genre),  # Rejoin to display properly
             'imdb_id': imdb_id
         })
+    
     return recommended_movies
 
 def get_movie_poster(imdb_id):
@@ -60,60 +75,56 @@ def get_movie_poster(imdb_id):
     return data.get('Poster', '')
 
 def main():
-    st.set_page_config(page_title="Movie Recommender", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(
+        page_title="Movie Recommender",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
 
-    # Dark-themed CSS
     st.markdown("""<style>
-    body { background-color: #0D0D0D; font-family: 'Arial', sans-serif; color: #FFFFFF; }
-    .title { font-size: 42px; font-weight: 800; color: #E50914; text-align: center; margin-bottom: 40px; }
-    .movie-card { border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.8); transition: transform 0.3s ease, box-shadow 0.3s ease; margin: 10px; background: linear-gradient(to bottom, #1A1A1A, #0D0D0D); text-align: center; padding: 10px; height: 100%; }
-    .movie-card:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 25px rgba(255,0,0,0.5); }
-    .movie-image { width: 100%; height: 300px; object-fit: cover; border-radius: 10px; }
-    .movie-title { font-size: 18px; font-weight: 700; color: #FFFFFF; margin-top: 10px; min-height: 50px; }
-    .movie-genres { font-size: 14px; color: #BBBBBB; margin-top: 5px; }
-    .scroll-container { display: flex; overflow-x: auto; padding-bottom: 10px; }
-    .scroll-container::-webkit-scrollbar { display: none; }
-    .sidebar .stCheckbox label { font-size: 14px; color: #FFFFFF; }
-    .stSelectbox > div > div > div { background-color: #1A1A1A; color: #FFFFFF; border-radius: 8px; }
-    .stButton>button { background-color: #E50914; color: #FFFFFF; font-weight: 700; border-radius: 8px; padding: 0.5em 1em; }
-    .stButton>button:hover { background-color: #F6121D; }
-    </style>""", unsafe_allow_html=True)
+            .title { font-size: 36px; font-weight: bold; color: #333333; text-align: center; margin-bottom: 30px; }
+            .movie-card { border: 2px solid #ddd; border-radius: 10px; padding: 10px; background-color: rgba(255, 255, 255, 0.8); text-align: center; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); transition: transform 0.3s ease-in-out; margin-top: 20px; width: 100%; height: 500px; }
+            .movie-card:hover { transform: scale(1.05); }
+            .movie-title { font-size: 16px; font-weight: bold; margin-top: 10px; color: #333; }
+            .movie-image { width: 100%; border-radius: 8px; height: 400px; object-fit: cover; }
+            .movie-genres { font-size: 14px; color: #555; margin-top: 5px; }
+        </style>""", unsafe_allow_html=True)
 
-    st.markdown('<div class="title">🎬 Movie Recommendation System</div>', unsafe_allow_html=True)
+    st.markdown('<div class="title">Movie Recommendation System</div>', unsafe_allow_html=True)
 
     data = load_data()
     if data is None or data.empty:
         st.write("Error: Data not loaded correctly.")
         return
 
-    # Sidebar - genre filter
-    st.sidebar.header("Filter by Genre")
+    movie_title = st.selectbox("Select a Movie", data['title'].values)
     genres_list = ['Action', 'Adventure', 'Animation', 'Children', 'Comedy', 'Crime',
                    'Documentary', 'Drama', 'Fantasy', 'Film-Noir', 'Horror',
                    'IMAX', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western']
     selected_genres = [genre for genre in genres_list if st.sidebar.checkbox(genre)]
 
-    movie_title = st.selectbox("Select a Movie", data['title'].values)
-
     if st.button('Recommend'):
-        recommended_movies = recommend_movies(movie_title, data, 20, selected_genres)
+        recommended_movies = recommend_movies(movie_title, data, 12, selected_genres)
+
         if not recommended_movies:
             st.write("No recommendations found.")
         else:
-            # Horizontal scrollable carousel
-            st.markdown('<h3 style="color:#E50914; margin-top:30px;">Recommended Movies</h3>', unsafe_allow_html=True)
-            st.markdown('<div class="scroll-container">', unsafe_allow_html=True)
-            for movie in recommended_movies:
-                poster_url = get_movie_poster(movie['imdb_id'])
-                st.markdown(f"""
-                <div class="movie-card" style="min-width:200px;">
-                    <img src="{poster_url}" class="movie-image" />
-                    <div class="movie-title">{movie['movie_name']}</div>
-                    <div class="movie-genres">{movie['movie_genre']}</div>
-                </div>
-                """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+            # Display in a 4x3 grid
+            num_columns = 3
+            rows = [recommended_movies[i:i + num_columns] for i in range(0, len(recommended_movies), num_columns)]
+
+            for row in rows:
+                cols = st.columns(num_columns)
+                for col, movie in zip(cols, row):
+                    poster_url = get_movie_poster(movie['imdb_id'])
+                    with col:
+                        st.markdown(f"""
+                            <div class="movie-card">
+                                <img src="{poster_url}" class="movie-image" />
+                                <div class="movie-title">{movie['movie_name']}</div>
+                                <div class="movie-genres">Genres: {movie['movie_genre']}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
 
 if __name__ == '__main__':
     main()
-
